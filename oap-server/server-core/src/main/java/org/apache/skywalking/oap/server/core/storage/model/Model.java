@@ -19,29 +19,45 @@
 package org.apache.skywalking.oap.server.core.storage.model;
 
 import java.util.List;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.apache.skywalking.oap.server.core.analysis.DownSampling;
 
 /**
- * @author peng-yongsheng
+ * The model definition of a logic entity.
  */
 @Getter
+@EqualsAndHashCode
 public class Model {
     private final String name;
-    private final boolean isMetrics;
-    private final boolean deleteHistory;
     private final List<ModelColumn> columns;
-    private final int sourceScopeId;
+    private final List<ExtraQueryIndex> extraQueryIndices;
+    private final int scopeId;
+    private final DownSampling downsampling;
+    private final boolean record;
+    private final boolean superDataset;
+    private final boolean isTimeSeries;
+    private final String aggregationFunctionName;
+    private final boolean timeRelativeID;
 
-    public Model(String name, List<ModelColumn> columns, boolean isMetrics, boolean deleteHistory,
-        int sourceScopeId) {
+    public Model(final String name,
+                 final List<ModelColumn> columns,
+                 final List<ExtraQueryIndex> extraQueryIndices,
+                 final int scopeId,
+                 final DownSampling downsampling,
+                 final boolean record,
+                 final boolean superDataset,
+                 final String aggregationFunctionName,
+                 boolean timeRelativeID) {
         this.name = name;
         this.columns = columns;
-        this.isMetrics = isMetrics;
-        this.deleteHistory = deleteHistory;
-        this.sourceScopeId = sourceScopeId;
-    }
-
-    public Model copy(String name) {
-        return new Model(name, columns, isMetrics, deleteHistory, sourceScopeId);
+        this.extraQueryIndices = extraQueryIndices;
+        this.scopeId = scopeId;
+        this.downsampling = downsampling;
+        this.isTimeSeries = !DownSampling.None.equals(downsampling);
+        this.record = record;
+        this.superDataset = superDataset;
+        this.aggregationFunctionName = aggregationFunctionName;
+        this.timeRelativeID = timeRelativeID;
     }
 }

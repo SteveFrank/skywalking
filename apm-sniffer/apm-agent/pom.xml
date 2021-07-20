@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.skywalking</groupId>
         <artifactId>apm-sniffer</artifactId>
-        <version>6.2.0-SNAPSHOT</version>
+        <version>8.7.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apm-agent</artifactId>
@@ -34,6 +34,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <premain.class>org.apache.skywalking.apm.agent.SkyWalkingAgent</premain.class>
+        <can.redefine.classes>true</can.redefine.classes>
+        <can.retransform.classes>true</can.retransform.classes>
         <shade.net.bytebuddy.source>net.bytebuddy</shade.net.bytebuddy.source>
         <shade.net.bytebuddy.target>${shade.package}.${shade.net.bytebuddy.source}</shade.net.bytebuddy.target>
     </properties>
@@ -67,21 +69,23 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Premain-Class>${premain.class}</Premain-Class>
+                                        <Can-Redefine-Classes>${can.redefine.classes}</Can-Redefine-Classes>
+                                        <Can-Retransform-Classes>${can.retransform.classes}</Can-Retransform-Classes>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
                             <artifactSet>
                                 <excludes>
-                                    <exclude>com.lmax:*</exclude>
-                                    <exclude>org.apache.httpcomponents:*</exclude>
-                                    <exclude>commons-logging:*</exclude>
-                                    <exclude>commons-codec:*</exclude>
                                     <exclude>*:gson</exclude>
                                     <exclude>io.grpc:*</exclude>
                                     <exclude>io.netty:*</exclude>
                                     <exclude>io.opencensus:*</exclude>
                                     <exclude>com.google.*:*</exclude>
                                     <exclude>com.google.guava:guava</exclude>
+                                    <exclude>org.checkerframework:checker-compat-qual</exclude>
+                                    <exclude>org.codehaus.mojo:animal-sniffer-annotations</exclude>
+                                    <exclude>io.perfmark:*</exclude>
+                                    <exclude>org.slf4j:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <relocations>
@@ -112,9 +116,9 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <delete dir="${project.basedir}/../../skywalking-agent" />
-                            </tasks>
+                            </target>
                         </configuration>
                     </execution>
                     <execution>
@@ -124,13 +128,13 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <tasks>
+                            <target>
                                 <mkdir dir="${project.basedir}/../../skywalking-agent" />
                                 <copy file="${project.build.directory}/skywalking-agent.jar" tofile="${project.basedir}/../../skywalking-agent/skywalking-agent.jar" overwrite="true" />
                                 <mkdir dir="${project.basedir}/../../skywalking-agent/config" />
                                 <mkdir dir="${project.basedir}/../../skywalking-agent/logs" />
                                 <copydir src="${project.basedir}/../config" dest="${project.basedir}/../../skywalking-agent/config" forceoverwrite="true" />
-                            </tasks>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

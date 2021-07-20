@@ -20,157 +20,96 @@ package org.apache.skywalking.oap.server.storage.plugin.elasticsearch;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.skywalking.oap.server.core.storage.annotation.SuperDataset;
 import org.apache.skywalking.oap.server.library.module.ModuleConfig;
 
-/**
- * @author peng-yongsheng
- */
+@Getter
+@Setter
 public class StorageModuleElasticsearchConfig extends ModuleConfig {
-
-    @Setter @Getter private String nameSpace;
-    @Setter @Getter private String clusterNodes;
-    private int indexShardsNumber;
-    private int indexReplicasNumber;
-    private boolean highPerformanceMode;
-    private int traceDataTTL = 90;
-    private int minuteMetricDataTTL = 90;
-    private int hourMetricDataTTL = 36;
-    private int dayMetricDataTTL = 45;
-    private int monthMetricDataTTL = 18;
-    private int bulkActions = 2000;
-    private int bulkSize = 20;
-    private int flushInterval = 10;
+    private String nameSpace;
+    private String clusterNodes;
+    String protocol = "http";
+    /**
+     * Connect timeout of ElasticSearch client.
+     *
+     * @since 8.7.0
+     */
+    private int connectTimeout = 500;
+    /**
+     * Socket timeout of ElasticSearch client.
+     *
+     * @since 8.7.0
+     */
+    private int socketTimeout = 30000;
+    /**
+     * @since 6.4.0, the index of metrics and traces data in minute/hour/month precision are organized in days. ES
+     * storage creates new indexes in every day.
+     *
+     * @since 7.0.0 dayStep represents how many days a single one index represents. Default is 1, meaning no difference
+     * with previous versions. But if there isn't much traffic for single one day, user could set the step larger to
+     * reduce the number of indexes, and keep the TTL longer.
+     */
+    private int dayStep = 1;
+    private int indexReplicasNumber = 0;
+    private int indexShardsNumber = 1;
+    /**
+     * @since 8.2.0, the record day step is for super size dataset record index rolling when the value of it is greater
+     * than 0
+     */
+    private int superDatasetDayStep = -1;
+    /**
+     * @see SuperDataset
+     * @since 8.2.0, the replicas number is for super size dataset record replicas number
+     */
+    private int superDatasetIndexReplicasNumber = 0;
+    private int superDatasetIndexShardsFactor = 5;
+    private int indexRefreshInterval = 2;
+    /**
+     * @since 8.7.0 This setting affects all traces/logs/metrics/metadata flush policy.
+     */
+    private int bulkActions = 5000;
+    /**
+     * Period of flesh, no matter `bulkActions` reached or not.
+     * INT(flushInterval * 2/3) would be used for index refresh period.
+     * Unit is second.
+     *
+     * @since 8.7.0 increase to 15s from 10s
+     * @since 8.7.0 use INT(flushInterval * 2/3) as ElasticSearch index refresh interval. Default is 10s.
+     */
+    private int flushInterval = 15;
     private int concurrentRequests = 2;
+    /**
+     * @since 7.0.0 This could be managed inside {@link #secretsManagementFile}
+     */
     private String user;
+    /**
+     * @since 7.0.0 This could be managed inside {@link #secretsManagementFile}
+     */
     private String password;
+    /**
+     * Secrets management file includes the username, password, which are managed by 3rd party tool.
+     */
+    private String secretsManagementFile;
+    private String trustStorePath;
+    /**
+     * @since 7.0.0 This could be managed inside {@link #secretsManagementFile}
+     */
+    private String trustStorePass;
+    private int resultWindowMaxSize = 10000;
     private int metadataQueryMaxSize = 5000;
     private int segmentQueryMaxSize = 200;
-
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public int getIndexShardsNumber() {
-        return indexShardsNumber;
-    }
-
-    void setIndexShardsNumber(int indexShardsNumber) {
-        this.indexShardsNumber = indexShardsNumber;
-    }
-
-    public int getIndexReplicasNumber() {
-        return indexReplicasNumber;
-    }
-
-    void setIndexReplicasNumber(int indexReplicasNumber) {
-        this.indexReplicasNumber = indexReplicasNumber;
-    }
-
-    boolean isHighPerformanceMode() {
-        return highPerformanceMode;
-    }
-
-    void setHighPerformanceMode(boolean highPerformanceMode) {
-        this.highPerformanceMode = highPerformanceMode;
-    }
-
-    public int getTraceDataTTL() {
-        return traceDataTTL;
-    }
-
-    void setTraceDataTTL(int traceDataTTL) {
-        this.traceDataTTL = traceDataTTL == 0 ? 90 : traceDataTTL;
-    }
-
-    public int getMinuteMetricDataTTL() {
-        return minuteMetricDataTTL;
-    }
-
-    void setMinuteMetricDataTTL(int minuteMetricDataTTL) {
-        this.minuteMetricDataTTL = minuteMetricDataTTL == 0 ? 90 : minuteMetricDataTTL;
-    }
-
-    public int getHourMetricDataTTL() {
-        return hourMetricDataTTL;
-    }
-
-    void setHourMetricDataTTL(int hourMetricDataTTL) {
-        this.hourMetricDataTTL = hourMetricDataTTL == 0 ? 36 : hourMetricDataTTL;
-    }
-
-    public int getDayMetricDataTTL() {
-        return dayMetricDataTTL;
-    }
-
-    void setDayMetricDataTTL(int dayMetricDataTTL) {
-        this.dayMetricDataTTL = dayMetricDataTTL == 0 ? 45 : dayMetricDataTTL;
-    }
-
-    public int getMonthMetricDataTTL() {
-        return monthMetricDataTTL;
-    }
-
-    void setMonthMetricDataTTL(int monthMetricDataTTL) {
-        this.monthMetricDataTTL = monthMetricDataTTL == 0 ? 18 : monthMetricDataTTL;
-    }
-
-    public int getBulkActions() {
-        return bulkActions;
-    }
-
-    public void setBulkActions(int bulkActions) {
-        this.bulkActions = bulkActions == 0 ? 2000 : bulkActions;
-    }
-
-    public int getBulkSize() {
-        return bulkSize;
-    }
-
-    public void setBulkSize(int bulkSize) {
-        this.bulkSize = bulkSize == 0 ? 20 : bulkSize;
-    }
-
-    public int getFlushInterval() {
-        return flushInterval;
-    }
-
-    public void setFlushInterval(int flushInterval) {
-        this.flushInterval = flushInterval == 0 ? 10 : flushInterval;
-    }
-
-    public int getConcurrentRequests() {
-        return concurrentRequests;
-    }
-
-    public void setConcurrentRequests(int concurrentRequests) {
-        this.concurrentRequests = concurrentRequests == 0 ? 2 : concurrentRequests;
-    }
-
-    public int getMetadataQueryMaxSize() {
-        return metadataQueryMaxSize;
-    }
-
-    public void setMetadataQueryMaxSize(int metadataQueryMaxSize) {
-        this.metadataQueryMaxSize = metadataQueryMaxSize;
-    }
-
-    public int getSegmentQueryMaxSize() {
-        return segmentQueryMaxSize;
-    }
-
-    public void setSegmentQueryMaxSize(int segmentQueryMaxSize) {
-        this.segmentQueryMaxSize = segmentQueryMaxSize;
-    }
+    private int profileTaskQueryMaxSize = 200;
+    /**
+     * The default analyzer for match query field. {@link org.apache.skywalking.oap.server.core.storage.annotation.Column.AnalyzerType#OAP_ANALYZER}
+     *
+     * @since 8.4.0
+     */
+    private String oapAnalyzer = "{\"analyzer\":{\"oap_analyzer\":{\"type\":\"stop\"}}}";
+    /**
+     * The log analyzer for match query field. {@link org.apache.skywalking.oap.server.core.storage.annotation.Column.AnalyzerType#OAP_LOG_ANALYZER}
+     *
+     * @since 8.4.0
+     */
+    private String oapLogAnalyzer = "{\"analyzer\":{\"oap_log_analyzer\":{\"type\":\"standard\"}}}";
+    private String advanced;
 }

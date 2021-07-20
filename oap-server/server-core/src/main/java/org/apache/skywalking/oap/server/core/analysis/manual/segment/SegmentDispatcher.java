@@ -19,15 +19,14 @@
 package org.apache.skywalking.oap.server.core.analysis.manual.segment;
 
 import org.apache.skywalking.oap.server.core.analysis.SourceDispatcher;
-import org.apache.skywalking.oap.server.core.analysis.worker.RecordProcess;
+import org.apache.skywalking.oap.server.core.analysis.manual.searchtag.Tag;
+import org.apache.skywalking.oap.server.core.analysis.worker.RecordStreamProcessor;
 import org.apache.skywalking.oap.server.core.source.Segment;
 
-/**
- * @author peng-yongsheng
- */
 public class SegmentDispatcher implements SourceDispatcher<Segment> {
 
-    @Override public void dispatch(Segment source) {
+    @Override
+    public void dispatch(Segment source) {
         SegmentRecord segment = new SegmentRecord();
         segment.setSegmentId(source.getSegmentId());
         segment.setTraceId(source.getTraceId());
@@ -42,7 +41,9 @@ public class SegmentDispatcher implements SourceDispatcher<Segment> {
         segment.setDataBinary(source.getDataBinary());
         segment.setTimeBucket(source.getTimeBucket());
         segment.setVersion(source.getVersion());
+        segment.setTagsRawData(source.getTags());
+        segment.setTags(Tag.Util.toStringList(source.getTags()));
 
-        RecordProcess.INSTANCE.in(segment);
+        RecordStreamProcessor.getInstance().in(segment);
     }
 }

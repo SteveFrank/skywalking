@@ -18,13 +18,25 @@
 
 package org.apache.skywalking.oap.server.core.analysis.metrics.expression;
 
-/**
- *
- *
- * @author wusheng
- */
-public class EqualMatch extends BinaryMatchExpression {
-    @Override public boolean match() {
-        return left.equals(right);
+import java.util.Objects;
+import org.apache.skywalking.oap.server.core.analysis.metrics.annotation.FilterMatcher;
+
+@FilterMatcher("stringMatch")
+public class EqualMatch {
+
+    public boolean match(String left, String right) {
+        if (left.startsWith("\"") && left.endsWith("\"")) {
+            left = left.substring(1, left.length() - 1);
+        }
+
+        if (right.startsWith("\"") && right.endsWith("\"")) {
+            right = left.substring(1, right.length() - 1);
+        }
+
+        return Objects.equals(left, right);
+    }
+
+    public boolean match(Object left, Object right) {
+        return Objects.equals(left, right);
     }
 }
